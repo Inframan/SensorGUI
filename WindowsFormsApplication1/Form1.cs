@@ -47,6 +47,8 @@ namespace WindowsFormsApplication1
                 minValues[i] = Double.MaxValue;
                 maxValues[i] = Double.MinValue;
             }
+
+            stopWatch = new Stopwatch();
         }
 
         private void getPerformanceCounters()
@@ -174,8 +176,7 @@ namespace WindowsFormsApplication1
             cpuThread = new Thread(new ThreadStart(this.getPerformanceCounters));
             cpuThread.IsBackground = true;
             cpuThread.Start();
-            stopWatch = new Stopwatch();
-            stopWatch.Start();
+            stopWatch.Restart();
         }
 
         private void chart1_Click(object sender, EventArgs e)
@@ -237,7 +238,7 @@ namespace WindowsFormsApplication1
                 string s = "Time (min:sec)" + "," + "GSR" + "," + "TEMP" + "," + "RESP" + "," + "EMG1" + "," + "EMG2" + "," + "HR" + "\n";
                 byte[] arr = Encoding.ASCII.GetBytes(s);
                 fs.Write(arr, 0, arr.Length);
-
+                stopWatch.Restart();
 
 
 
