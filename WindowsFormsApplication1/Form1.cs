@@ -35,12 +35,13 @@ namespace WindowsFormsApplication1
         private double[] minValues = new double[6];
         private double[] maxValues = new double[6];
 
-
+        private SaveFileDialog continuous_file;
+        Stopwatch stopWatch;
 
         public Form1()
         {
             InitializeComponent();
-
+            gsrArray = new double[60];
             for (int i = 0; i < 6; i++)
             {
                 minValues[i] = Double.MaxValue;
@@ -66,46 +67,47 @@ namespace WindowsFormsApplication1
                 //17 - EMG 2
                 //22 - Heart Rate
 
-
+                int k = 0;
                 for (int i = 0; i < 23; i++)
                 {
-                    switch (i)
+                    switch(i)
                     {
                         case 4:
                             gsrArray[gsrArray.Length - 1] = br.ReadDouble();
-                            minValues[0] = Math.Min(minValues[0], gsrArray[gsrArray.Length - 1]);
-                            maxValues[0] = Math.Max(maxValues[0], gsrArray[gsrArray.Length - 1]);
+                            minValues[k] = Math.Min(minValues[k], gsrArray[gsrArray.Length - 1]);
+                            maxValues[k] = Math.Max(maxValues[k], gsrArray[gsrArray.Length - 1]);
                             break;
                         case 5:
-                            tempArray[tempArray.Length - 1] = br.ReadDouble();
-                            minValues[1] = Math.Min(minValues[1], tempArray[gsrArray.Length - 1]);
-                            maxValues[1] = Math.Max(maxValues[1], tempArray[gsrArray.Length - 1]);
+                            tempArray[gsrArray.Length - 1] = br.ReadDouble();
+                            minValues[k] = Math.Min(minValues[k], tempArray[tempArray.Length - 1]);
+                            maxValues[k] = Math.Max(maxValues[k], tempArray[tempArray.Length - 1]);
                             break;
                         case 7:
                             respArray[gsrArray.Length - 1] = br.ReadDouble();
-                            minValues[2] = Math.Min(minValues[2], respArray[gsrArray.Length - 1]);
-                            maxValues[2] = Math.Max(maxValues[2], respArray[gsrArray.Length - 1]);
+                            minValues[k] = Math.Min(minValues[k], respArray[respArray.Length - 1]);
+                            maxValues[k] = Math.Max(maxValues[k], respArray[respArray.Length - 1]);
                             break;
                         case 12:
                             emg1Array[gsrArray.Length - 1] = br.ReadDouble();
-                            minValues[3] = Math.Min(minValues[3], emg1Array[gsrArray.Length - 1]);
-                            maxValues[3] = Math.Max(maxValues[3], emg1Array[gsrArray.Length - 1]);
+                            minValues[k] = Math.Min(minValues[k], emg1Array[emg1Array.Length - 1]);
+                            maxValues[k] = Math.Max(maxValues[k], emg1Array[emg1Array.Length - 1]);
                             break;
                         case 17:
                             emg2Array[gsrArray.Length - 1] = br.ReadDouble();
-                            minValues[4] = Math.Min(minValues[4], emg2Array[gsrArray.Length - 1]);
-                            maxValues[4] = Math.Max(maxValues[4], emg2Array[gsrArray.Length - 1]);
+                            minValues[k] = Math.Min(minValues[k], emg2Array[emg2Array.Length - 1]);
+                            maxValues[k] = Math.Max(maxValues[k], emg2Array[emg2Array.Length - 1]);
                             break;
                         case 22:
                             hrArray[gsrArray.Length - 1] = br.ReadDouble();
-                            minValues[5] = Math.Min(minValues[5], hrArray[gsrArray.Length - 1]);
-                            maxValues[5] = Math.Max(maxValues[5], hrArray[gsrArray.Length - 1]);
+                            minValues[k] = Math.Min(minValues[k], hrArray[hrArray.Length - 1]);
+                            maxValues[k] = Math.Max(maxValues[k], hrArray[hrArray.Length - 1]);
                             break;
                         default:
                             br.ReadDouble();
+                            k--;
                             break;
                     }
-
+                    k++;
                 }
 
                 Array.Copy(gsrArray, 1, gsrArray, 0, gsrArray.Length - 1);
@@ -124,6 +126,23 @@ namespace WindowsFormsApplication1
                 {
                     //......
                 }
+
+                if (continuous_file.FileName != "")
+                {
+                    // Saves the Image via a FileStream created by the OpenFile method.  
+                    System.IO.FileStream cfs = File.Open(continuous_file.FileName, FileMode.Append); // will append to end of file
+
+                    //FileStream fappend = 
+
+
+                    string s = stopWatch.Elapsed.Minutes + ":"+stopWatch.Elapsed.Seconds + "," + gsrArray[gsrArray.Length - 1] + "," + tempArray[gsrArray.Length - 1] + "," + respArray[gsrArray.Length - 1] + "," + emg1Array[gsrArray.Length - 1] + "," + emg2Array[gsrArray.Length - 1] + "," + hrArray[gsrArray.Length - 1] + "\n";
+                    byte[] arr = Encoding.ASCII.GetBytes(s);
+                    cfs.Write(arr, 0, arr.Length);
+
+
+                    cfs.Close();
+                }
+
 
                 Thread.Sleep(1000);
             }
@@ -155,6 +174,8 @@ namespace WindowsFormsApplication1
             cpuThread = new Thread(new ThreadStart(this.getPerformanceCounters));
             cpuThread.IsBackground = true;
             cpuThread.Start();
+            stopWatch = new Stopwatch();
+            stopWatch.Start();
         }
 
         private void chart1_Click(object sender, EventArgs e)
@@ -189,6 +210,33 @@ namespace WindowsFormsApplication1
                     byte[] arr = Encoding.ASCII.GetBytes(s);
                     fs.Write(arr, 0, arr.Length);
                 }
+
+
+
+
+                fs.Close();
+            }
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            // Displays a SaveFileDialog so the user can save the Image  
+            // assigned to Button2.  
+            continuous_file = new SaveFileDialog();
+            continuous_file.Filter = "CSV file (.csv)|.csv";
+            continuous_file.Title = "File name to save";
+            continuous_file.ShowDialog();
+
+            if (continuous_file.FileName != "")
+            {
+                // Saves the Image via a FileStream created by the OpenFile method.  
+                System.IO.FileStream fs =
+                   (System.IO.FileStream)continuous_file.OpenFile();
+
+
+                string s = "Time (min:sec)" + "," + "GSR" + "," + "TEMP" + "," + "RESP" + "," + "EMG1" + "," + "EMG2" + "," + "HR" + "\n";
+                byte[] arr = Encoding.ASCII.GetBytes(s);
+                fs.Write(arr, 0, arr.Length);
 
 
 
